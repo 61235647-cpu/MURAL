@@ -1,39 +1,206 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Proyecto MURAL">
-  <title>MURAL</title>
+  <title>MURALOXAPAMPINO — Tablero Comunitario y Comercial</title>
   <link rel="stylesheet" href="styles.css">
-  <script src="app.js" defer></script>
 </head>
 <body>
-  <header class="site-header">
-    <a class="brand" href="#" aria-label="MURAL, inicio">MURAL</a>
-    <nav aria-label="Navegación principal">
-      <a href="#inicio">Inicio</a>
-      <a href="#acerca">Acerca de</a>
-      <a href="#contacto">Contacto</a>
-    </nav>
+
+  <!-- Barra Superior -->
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <div>
+          <h1>MURALOXAPAMPINO</h1>
+          <p class="subtitle">Anuncios, ofertas y comunidad en tiempo real</p>
+        </div>
+      </div>
+
+      <div class="topbar-actions">
+        <button id="btnAdminToggle" class="btn btn-ghost">Acceso Admin</button>
+        <button id="btnOpenModal" class="btn btn-primary">+ Publicar Nota</button>
+      </div>
+    </div>
   </header>
 
-  <main>
-    <section class="hero" id="inicio">
-      <p class="eyebrow">Bienvenido a</p>
-      <h1>Tu espacio creativo comienza aquí.</h1>
-      <p class="hero-copy">Una base sencilla para construir el proyecto MURAL.</p>
-      <a class="button" href="#acerca">Conocer más</a>
+  <!-- Barra de Control Admin (Oculta por defecto) -->
+  <section id="adminBar" class="admin-bar hidden">
+    <div class="container admin-bar-inner">
+      <div class="admin-status">
+        <span class="status-dot"></span>
+        <span>MODO ADMINISTRADOR ACTIVO — Control total habilitado</span>
+      </div>
+      <div class="admin-stats">
+        <span id="pendingCount">0 pendientes de revisión</span>
+        <button id="btnLogoutAdmin" class="btn btn-danger-sm">Cerrar Sesión</button>
+      </div>
+    </div>
+  </section>
+
+  <main class="container main-content">
+
+    <!-- FILA DESTACADA: ESPACIOS FIJOS (S/ 5 - 84 HORAS) -->
+    <section class="section-block">
+      <div class="section-header">
+        <div>
+          <h2>ESPACIOS FIJOS</h2>
+          <p class="section-desc">Anuncios destacados de negocios y eventos · Vigencia 3 días y medio (84h)</p>
+        </div>
+        <button id="btnOpenVipModal" class="btn btn-outline-crimson">Reservar Espacio (S/ 5)</button>
+      </div>
+
+      <div id="vipGrid" class="vip-grid">
+        <!-- Tarjetas VIP renderizadas por JS -->
+      </div>
     </section>
 
-    <section class="content-section" id="acerca">
-      <h2>Acerca de MURAL</h2>
-      <p>Este espacio está listo para que agregues el contenido y las funciones de tu proyecto.</p>
+    <hr class="divider">
+
+    <!-- FILTROS DEL MURO COMUNITARIO -->
+    <section class="section-block">
+      <div class="section-header community-header">
+        <div>
+          <h2>MURO COMUNITARIO</h2>
+          <p class="section-desc">Publicaciones libres · Vigencia 24 horas</p>
+        </div>
+
+        <div class="filter-group" id="filterGroup">
+          <button class="filter-btn active" data-filter="todos">Todos</button>
+          <button class="filter-btn" data-filter="oferta">Ofertas</button>
+          <button class="filter-btn" data-filter="aviso">Avisos</button>
+          <button class="filter-btn" data-filter="humor">Memes / Humor</button>
+          <button class="filter-btn" data-filter="musica">Música / Media</button>
+        </div>
+      </div>
+
+      <!-- Cola de Revisión (Solo visible para Admin cuando hay pendientes) -->
+      <div id="pendingSection" class="pending-box hidden">
+        <h3>Cola de Aprobación (Multimedia y Pagos S/ 5)</h3>
+        <div id="pendingGrid" class="community-grid"></div>
+      </div>
+
+      <!-- Cuadrícula Principal -->
+      <div id="communityGrid" class="community-grid">
+        <!-- Tarjetas comunitarias renderizadas por JS -->
+      </div>
     </section>
+
   </main>
 
-  <footer id="contacto">
-    <p>&copy; <span id="year"></span> MURAL. Todos los derechos reservados.</p>
-  </footer>
+  <!-- MODAL DE PUBLICACIÓN -->
+  <div id="publishModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Nueva Publicación en el Mural</h3>
+        <button id="btnCloseModal" class="close-btn">&times;</button>
+      </div>
+
+      <form id="publishForm" class="form-stack">
+        <!-- Selector de Plan -->
+        <div class="plan-selector">
+          <label class="plan-option">
+            <input type="radio" name="plan" value="gratis" checked>
+            <div class="plan-box">
+              <strong>Nota Gratuita</strong>
+              <span>Duración: 24 horas · Tamaño estándar</span>
+            </div>
+          </label>
+          <label class="plan-option">
+            <input type="radio" name="plan" value="vip">
+            <div class="plan-box vip-option">
+              <strong>Espacio Fijo — S/ 5</strong>
+              <span>Duración: 3.5 días (84h) · Fila superior + Color</span>
+            </div>
+          </label>
+        </div>
+
+        <!-- Opciones extra solo para VIP -->
+        <div id="vipOptions" class="vip-config hidden">
+          <label class="field-label">Color de acento de tu tarjeta VIP:</label>
+          <div class="color-swatches">
+            <label><input type="radio" name="vipColor" value="#b91c1c" checked><span style="background:#b91c1c"></span>Carmesí</label>
+            <label><input type="radio" name="vipColor" value="#1d4ed8"><span style="background:#1d4ed8"></span>Azul</label>
+            <label><input type="radio" name="vipColor" value="#047857"><span style="background:#047857"></span>Esmeralda</label>
+            <label><input type="radio" name="vipColor" value="#b45309"><span style="background:#b45309"></span>Ámbar</label>
+            <label><input type="radio" name="vipColor" value="#6d28d9"><span style="background:#6d28d9"></span>Púrpura</label>
+          </div>
+          <div class="payment-notice">
+            <strong>Activación S/ 5 (Yape / Plin):</strong> Tu nota entrará en cola de validación. Al confirmar el pago al <strong>999 000 000</strong> se activará en la fila superior por 84 horas.
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="field-label">Categoría</label>
+            <select id="noteCategory" class="input-control">
+              <option value="oferta">Oferta / Negocio</option>
+              <option value="aviso">Aviso / Servicio</option>
+              <option value="humor">Meme / Chiste</option>
+              <option value="musica">Música / Video</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="field-label">Autor o Negocio</label>
+            <input type="text" id="noteAuthor" class="input-control" placeholder="Ej. Cafetería Central / Anónimo" maxlength="40" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="field-label">Título corto</label>
+          <input type="text" id="noteTitle" class="input-control" placeholder="Ej. Oferta en café pasado o chiste del día" maxlength="70" required>
+        </div>
+
+        <div class="form-group">
+          <label class="field-label">Contenido</label>
+          <textarea id="noteContent" class="input-control" rows="3" placeholder="Escribe tu anuncio, dirección, precio o comentario..." maxlength="350" required></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="field-label">WhatsApp / Contacto (opcional)</label>
+            <input type="text" id="noteContact" class="input-control" placeholder="Ej. 952640224" maxlength="20">
+          </div>
+          <div class="form-group">
+            <label class="field-label">Enlace YouTube / Audio / Web (opcional)</label>
+            <input type="url" id="noteLink" class="input-control" placeholder="https://...">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="field-label">Adjuntar Foto, Audio o Video corto (Pasa por revisión admin)</label>
+          <input type="file" id="noteMedia" class="input-file" accept="image/*,audio/*,video/*">
+          <small class="help-text">El texto puro se publica al instante. Archivos multimedia requieren aprobación del administrador para evitar contenido indebido.</small>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="btnCancelModal" class="btn btn-ghost">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Publicar en el Mural</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL LOGIN ADMIN -->
+  <div id="adminModal" class="modal-backdrop hidden">
+    <div class="modal-card modal-sm">
+      <div class="modal-header">
+        <h3>Control de Administrador</h3>
+        <button id="btnCloseAdminModal" class="close-btn">&times;</button>
+      </div>
+      <form id="adminLoginForm" class="form-stack">
+        <div class="form-group">
+          <label class="field-label">Clave de Administrador</label>
+          <input type="password" id="adminPassword" class="input-control" placeholder="Ingresa tu clave" required>
+          <small class="help-text">Clave demo local: <code>admin123</code></small>
+        </div>
+        <button type="submit" class="btn btn-primary full-width">Activar Control Total</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
