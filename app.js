@@ -1,3 +1,16 @@
+// ============================================
+// SUPABASE: conexión para el Mural Oxapampino
+// La clave publishable puede estar en el frontend.
+// Nunca coloques aquí una service_role/secret key.
+// ============================================
+const SUPABASE_URL = "https://sfdotyphtudkuomltxht.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_ea8h4bdeQBYuL0bNtdP3Ww_DQ-kGdQF";
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
+const SUPABASE_TABLE = "mural_posts";
+
 // Estado inicial de ejemplo para MURALOXAPAMPINO
 const INITIAL_NOTES = [
   {
@@ -91,6 +104,46 @@ const vipOptions = document.getElementById("vipOptions");
 
 function saveNotes() {
   localStorage.setItem("mural_oxa_notes", JSON.stringify(notes));
+}
+
+// Carga publicaciones compartidas desde Supabase.
+// La tabla guarda cada publicación completa en la columna JSONB "data".
+async function loadNotesFromSupabase() {
+  const { data, error } = await supabaseClient
+    .from(SUPABASE_TABLE)
+    .select("data")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Supabase: no se pudieron cargar las publicaciones:", error.message);
+    return;
+  }
+
+  if (Array.isArray(data) && data.length) {
+    const remoteNotes = data.map((row) => row.data).filter(Boolean);
+    const localOnly = notes.filter((local) =>
+      !remoteNotes.some((remote) => remote.id === local.id)
+    );
+    notes = [...remoteNotes, ...localOnly].sort(
+      (a, b) => (b.createdAt || 0) - (a.createdAt || 0)
+    );
+    saveNotes();
+    renderAll();
+  }
+}
+
+// Guarda una nueva publicación en la base de datos compartida.
+async function saveNoteToSupabase(note) {
+  const { error } = await supabaseClient
+    .from(SUPABASE_TABLE)
+    .insert({ id: note.id, data: note });
+
+  if (error) {
+    console.error("Supabase: no se pudo guardar la publicación:", error.message);
+    alert("La publicación quedó guardada en este dispositivo, pero no se pudo sincronizar con Supabase. Revisa la tabla y las políticas RLS.");
+    return false;
+  }
+  return true;
 }
 
 function getRemainingTime(expiresAt) {
@@ -311,6 +364,7 @@ publishForm.addEventListener("submit", (e) => {
 
     notes.unshift(newNote);
     saveNotes();
+    saveNoteToSupabase(newNote);
     publishForm.reset();
     vipOptions.classList.add("hidden");
     publishModal.classList.add("hidden");
@@ -375,5 +429,6 @@ document.getElementById("btnLogoutAdmin").addEventListener("click", () => {
   renderAll();
 });
 
-// Inicializar
+// Inicializar la interfaz y sincronizar publicaciones compartidas.
 renderAll();
+loadNotesFromSupabase();
