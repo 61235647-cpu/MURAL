@@ -1110,3 +1110,13 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;bac
 .modal-card{background:#fbfaf4!important;color:#29382d!important;border:1px solid #d8d1bd!important;border-radius:16px!important}
 .input-control{background:#fffefa!important;color:#28392d!important;border-color:#d5d8cc!important}
 @media(max-width:760px){body::before{background-position:center center;background-attachment:scroll}.section-block{padding:18px!important}.oxapampa-hero-inner{padding:22px}}
+
+/* Emblema natural de Oxapampa junto al nombre */
+.brand-mark{
+ width:38px!important;height:38px!important;min-width:38px;
+ display:inline-flex!important;align-items:center;justify-content:center;
+ background:linear-gradient(145deg,#e8d6a8,#c7a96b)!important;
+ border:1px solid rgba(255,255,255,.55);border-radius:11px!important;
+ color:#23452e;font-size:21px;line-height:1;
+ box-shadow:0 3px 12px rgba(0,0,0,.18);
+}
