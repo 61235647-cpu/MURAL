@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
   <!-- Barra Superior -->
   <header class="topbar">
     <div class="container topbar-inner">
@@ -18,14 +17,12 @@
           <p class="subtitle">Anuncios, ofertas y comunidad en tiempo real</p>
         </div>
       </div>
-
       <div class="topbar-actions">
         <button id="btnAdminToggle" class="btn btn-ghost">Acceso Admin</button>
         <button id="btnOpenModal" class="btn btn-primary">+ Publicar Nota</button>
       </div>
     </div>
   </header>
-
   <!-- Barra de Control Admin (Oculta por defecto) -->
   <section id="adminBar" class="admin-bar hidden">
     <div class="container admin-bar-inner">
@@ -39,9 +36,7 @@
       </div>
     </div>
   </section>
-
   <main class="container main-content">
-
     <!-- FILA DESTACADA: ESPACIOS FIJOS (S/ 5 - 84 HORAS) -->
     <section class="section-block">
       <div class="section-header">
@@ -51,14 +46,11 @@
         </div>
         <button id="btnOpenVipModal" class="btn btn-outline-crimson">Reservar Espacio (S/ 5)</button>
       </div>
-
       <div id="vipGrid" class="vip-grid">
         <!-- Tarjetas VIP renderizadas por JS -->
       </div>
     </section>
-
     <hr class="divider">
-
     <!-- FILTROS DEL MURO COMUNITARIO -->
     <section class="section-block">
       <div class="section-header community-header">
@@ -66,7 +58,6 @@
           <h2>MURO COMUNITARIO</h2>
           <p class="section-desc">Publicaciones libres · Vigencia 24 horas</p>
         </div>
-
         <div class="filter-group" id="filterGroup">
           <button class="filter-btn active" data-filter="todos">Todos</button>
           <button class="filter-btn" data-filter="oferta">Ofertas</button>
@@ -75,21 +66,17 @@
           <button class="filter-btn" data-filter="musica">Música / Media</button>
         </div>
       </div>
-
       <!-- Cola de Revisión (Solo visible para Admin cuando hay pendientes) -->
       <div id="pendingSection" class="pending-box hidden">
         <h3>Cola de Aprobación (Multimedia y Pagos S/ 5)</h3>
         <div id="pendingGrid" class="community-grid"></div>
       </div>
-
       <!-- Cuadrícula Principal -->
       <div id="communityGrid" class="community-grid">
         <!-- Tarjetas comunitarias renderizadas por JS -->
       </div>
     </section>
-
   </main>
-
   <!-- MODAL DE PUBLICACIÓN -->
   <div id="publishModal" class="modal-backdrop hidden">
     <div class="modal-card">
@@ -97,7 +84,6 @@
         <h3>Nueva Publicación en el Mural</h3>
         <button id="btnCloseModal" class="close-btn">&times;</button>
       </div>
-
       <form id="publishForm" class="form-stack">
         <!-- Selector de Plan -->
         <div class="plan-selector">
@@ -116,7 +102,6 @@
             </div>
           </label>
         </div>
-
         <!-- Opciones extra solo para VIP -->
         <div id="vipOptions" class="vip-config hidden">
           <label class="field-label">Color de acento de tu tarjeta VIP:</label>
@@ -131,7 +116,6 @@
             <strong>Activación S/ 5 (Yape / Plin):</strong> Tu nota entrará en cola de validación. Al confirmar el pago al <strong>999 000 000</strong> se activará en la fila superior por 84 horas.
           </div>
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label class="field-label">Categoría</label>
@@ -147,17 +131,14 @@
             <input type="text" id="noteAuthor" class="input-control" placeholder="Ej. Cafetería Central / Anónimo" maxlength="40" required>
           </div>
         </div>
-
         <div class="form-group">
           <label class="field-label">Título corto</label>
           <input type="text" id="noteTitle" class="input-control" placeholder="Ej. Oferta en café pasado o chiste del día" maxlength="70" required>
         </div>
-
         <div class="form-group">
           <label class="field-label">Contenido</label>
           <textarea id="noteContent" class="input-control" rows="3" placeholder="Escribe tu anuncio, dirección, precio o comentario..." maxlength="350" required></textarea>
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label class="field-label">WhatsApp / Contacto (opcional)</label>
@@ -168,13 +149,11 @@
             <input type="url" id="noteLink" class="input-control" placeholder="https://...">
           </div>
         </div>
-
         <div class="form-group">
           <label class="field-label">Adjuntar Foto, Audio o Video corto (Pasa por revisión admin)</label>
           <input type="file" id="noteMedia" class="input-file" accept="image/*,audio/*,video/*">
           <small class="help-text">El texto puro se publica al instante. Archivos multimedia requieren aprobación del administrador para evitar contenido indebido.</small>
         </div>
-
         <div class="modal-footer">
           <button type="button" id="btnCancelModal" class="btn btn-ghost">Cancelar</button>
           <button type="submit" class="btn btn-primary">Publicar en el Mural</button>
@@ -182,7 +161,6 @@
       </form>
     </div>
   </div>
-
   <!-- MODAL LOGIN ADMIN -->
   <div id="adminModal" class="modal-backdrop hidden">
     <div class="modal-card modal-sm">
@@ -192,15 +170,18 @@
       </div>
       <form id="adminLoginForm" class="form-stack">
         <div class="form-group">
-          <label class="field-label">Clave de Administrador</label>
-          <input type="password" id="adminPassword" class="input-control" placeholder="Ingresa tu clave" required>
-          <small class="help-text">Clave demo local: <code>admin123</code></small>
+          <label class="field-label">Correo Administrador</label>
+          <input type="email" id="adminEmail" class="input-control" placeholder="tu@correo.com" required>
         </div>
-        <button type="submit" class="btn btn-primary full-width">Activar Control Total</button>
+        <div class="form-group">
+          <label class="field-label">Contraseña</label>
+          <input type="password" id="adminPassword" class="input-control" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary full-width">Iniciar Sesión Admin</button>
       </form>
     </div>
   </div>
-
+  <!-- SDK de Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
 </body>
