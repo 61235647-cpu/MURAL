@@ -1,90 +1,13 @@
-// ============================================
-// SUPABASE: conexión para el Mural Oxapampino
-// La clave publishable puede estar en el frontend.
-// Nunca coloques aquí una service_role/secret key.
-// ============================================
+// ==========================================
+// CONFIGURACIÓN DE SUPABASE
+// ==========================================
 const SUPABASE_URL = "https://sfdotyphtudkuomltxht.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_ea8h4bdeQBYuL0bNtdP3Ww_DQ-kGdQF";
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_PUBLISHABLE_KEY
-);
-const SUPABASE_TABLE = "mural_posts";
+const SUPABASE_ANON_KEY = "sb_publishable_ea8h4bdeQBYuL0bNtdP3Ww_DQ-kGdQF";
 
-// Estado inicial de ejemplo para MURALOXAPAMPINO
-const INITIAL_NOTES = [
-  {
-    id: "vip-1",
-    plan: "vip",
-    color: "#b91c1c",
-    category: "oferta",
-    author: "Ferretería & Acabados Oxa",
-    title: "Lote de Planchas OSB y Calaminas Galvanizadas",
-    content: "Stock disponible para entrega inmediata en Oxapampa. Cotizaciones al instante para obra y techos.",
-    contact: "952640224",
-    link: "",
-    mediaType: null,
-    mediaUrl: null,
-    status: "approved",
-    reports: 0,
-    createdAt: Date.now() - 3600 * 1000 * 4,
-    expiresAt: Date.now() + 3600 * 1000 * 80
-  },
-  {
-    id: "vip-2",
-    plan: "vip",
-    color: "#047857",
-    category: "oferta",
-    author: "Tostaduría Villa Rica - Oxa",
-    title: "Café de Especialidad Molido al Instante — S/ 18",
-    content: "Presentación de 250g tueste medio. Visítanos a dos cuadras de la Plaza de Armas.",
-    contact: "999888777",
-    link: "",
-    mediaType: null,
-    mediaUrl: null,
-    status: "approved",
-    reports: 0,
-    createdAt: Date.now() - 3600 * 1000 * 10,
-    expiresAt: Date.now() + 3600 * 1000 * 74
-  },
-  {
-    id: "com-1",
-    plan: "gratis",
-    color: null,
-    category: "aviso",
-    author: "Pichanga Maracaná",
-    title: "Faltan 2 jugadores para 6v6 hoy 8:00 PM",
-    content: "Cancha sintética Maracaná. Cuota dividida entre todos, nivel parejo.",
-    contact: "987654321",
-    link: "",
-    mediaType: null,
-    mediaUrl: null,
-    status: "approved",
-    reports: 0,
-    createdAt: Date.now() - 3600 * 1000 * 2,
-    expiresAt: Date.now() + 3600 * 1000 * 22
-  },
-  {
-    id: "com-2",
-    plan: "gratis",
-    color: null,
-    category: "humor",
-    author: "Vecino del Centro",
-    title: "Clima oficial de Oxapampa",
-    content: "Sales con sol radiante, a las dos cuadras te cae diluvio y regresas a casa con arcoíris.",
-    contact: "",
-    link: "",
-    mediaType: null,
-    mediaUrl: null,
-    status: "approved",
-    reports: 0,
-    createdAt: Date.now() - 3600 * 1000 * 5,
-    expiresAt: Date.now() + 3600 * 1000 * 19
-  }
-];
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let notes = JSON.parse(localStorage.getItem("mural_oxa_notes")) || INITIAL_NOTES;
-let isAdmin = sessionStorage.getItem("mural_oxa_admin") === "true";
+let notes = [];
+let isAdmin = false;
 let currentFilter = "todos";
 
 // Referencias DOM
@@ -96,74 +19,76 @@ const pendingCount = document.getElementById("pendingCount");
 const adminBar = document.getElementById("adminBar");
 const btnAdminToggle = document.getElementById("btnAdminToggle");
 
-// Modales
 const publishModal = document.getElementById("publishModal");
 const adminModal = document.getElementById("adminModal");
 const publishForm = document.getElementById("publishForm");
 const vipOptions = document.getElementById("vipOptions");
 
-function saveNotes() {
-  localStorage.setItem("mural_oxa_notes", JSON.stringify(notes));
+// Verificar si ya hay sesión de administrador activa
+async function checkAdminSession() {
+  const { data: { session } } = await db.auth.getSession();
+  isAdmin = Boolean(session);
+  updateAdminUI();
 }
 
-// Carga publicaciones compartidas desde Supabase.
-// La tabla guarda cada publicación completa en la columna JSONB "data".
-async function loadNotesFromSupabase() {
-  const { data, error } = await supabaseClient
-    .from(SUPABASE_TABLE)
-    .select("data")
+function updateAdminUI() {
+  if (isAdmin) {
+    adminBar.classList.remove("hidden");
+    btnAdminToggle.textContent = "Admin Activo";
+  } else {
+    adminBar.classList.add("hidden");
+    btnAdminToggle.textContent = "Acceso Admin";
+  }
+}
+
+// Cargar notas desde Supabase
+async function fetchNotes() {
+  const nowISO = new Date().toISOString();
+
+  const { data, error } = await db
+    .from("notes")
+    .select("*")
+    .gt("expires_at", nowISO)
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Supabase: no se pudieron cargar las publicaciones:", error.message);
+    console.error("Error cargando notas:", error);
     return;
   }
 
-  if (Array.isArray(data) && data.length) {
-    const remoteNotes = data.map((row) => row.data).filter(Boolean);
-    const localOnly = notes.filter((local) =>
-      !remoteNotes.some((remote) => remote.id === local.id)
-    );
-    notes = [...remoteNotes, ...localOnly].sort(
-      (a, b) => (b.createdAt || 0) - (a.createdAt || 0)
-    );
-    saveNotes();
-    renderAll();
-  }
-}
-
-// Guarda una nueva publicación en la base de datos compartida.
-async function saveNoteToSupabase(note) {
-  const { error } = await supabaseClient
-    .from(SUPABASE_TABLE)
-    .insert({ id: note.id, data: note });
-
-  if (error) {
-    console.error("Supabase: no se pudo guardar la publicación:", error.message);
-    alert("La publicación quedó guardada en este dispositivo, pero no se pudo sincronizar con Supabase. Revisa la tabla y las políticas RLS.");
-    return false;
-  }
-  return true;
+  notes = data || [];
+  renderAll();
 }
 
 function getRemainingTime(expiresAt) {
-  const diff = expiresAt - Date.now();
+  const diff = new Date(expiresAt).getTime() - Date.now();
   if (diff <= 0) return "Expirado";
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
   return hours > 0 ? `${hours}h ${mins}m restantes` : `${mins}m restantes`;
 }
 
+function escapeHTML(str) {
+  if (!str) return "";
+  return str.replace(/[&<>"']/g, (m) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[m]));
+}
+
 function renderMedia(note) {
-  if (!note.mediaUrl) return "";
-  if (note.mediaType === "image") {
-    return `<div class="card-media"><img src="${note.mediaUrl}" alt="Adjunto"></div>`;
+  if (!note.media_url) return "";
+  if (note.media_type === "image") {
+    return `<div class="card-media"><img src="${note.media_url}" alt="Adjunto" loading="lazy"></div>`;
   }
-  if (note.mediaType === "audio") {
-    return `<div class="card-media"><audio controls src="${note.mediaUrl}"></audio></div>`;
+  if (note.media_type === "audio") {
+    return `<div class="card-media"><audio controls src="${note.media_url}"></audio></div>`;
   }
-  if (note.mediaType === "video") {
-    return `<div class="card-media"><video controls src="${note.mediaUrl}"></video></div>`;
+  if (note.media_type === "video") {
+    return `<div class="card-media"><video controls src="${note.media_url}"></video></div>`;
   }
   return "";
 }
@@ -174,17 +99,17 @@ function createCardHTML(note, isPendingView = false) {
   const borderStyle = isVip ? `style="border-left-color: ${note.color || "#b91c1c"};"` : "";
 
   const whatsappBtn = note.contact
-    ? `<a class="action-link action-whatsapp" href="https://wa.me/51${note.contact.replace(/\D/g, "")}" target="_blank" rel="noopener noreferrer">WhatsApp</a>`
+    ? `<a class="action-link action-whatsapp" href="https://wa.me/51${note.contact.replace(/\D/g, "")}" target="_blank">WhatsApp</a>`
     : "";
 
   const linkHtml = note.link
-    ? `<a class="external-link" href="${escapeAttribute(note.link)}" target="_blank" rel="noopener noreferrer">Abrir enlace adjunto</a>`
+    ? `<a class="external-link" href="${escapeHTML(note.link)}" target="_blank">Abrir enlace adjunto</a>`
     : "";
 
   const adminButtons = isAdmin
     ? `<div class="admin-controls">
-        ${isPendingView ? `<button class="btn btn-primary" style="padding:4px 10px;font-size:0.75rem;" onclick="approveNote('${note.id}')">Aprobar y Publicar</button>` : ""}
-        <button class="btn btn-danger-sm" onclick="deleteNote('${note.id}')">Eliminar</button>
+        ${isPendingView ? `<button class="btn btn-primary" style="padding:4px 10px;font-size:0.75rem;" onclick="approveNote('${note.id}', '${note.plan}')">Aprobar y Publicar</button>` : ""}
+        <button class="btn btn-danger-sm" onclick="deleteNote('${note.id}', '${note.media_url || ""}')">Eliminar</button>
        </div>`
     : "";
 
@@ -193,19 +118,21 @@ function createCardHTML(note, isPendingView = false) {
       <div>
         <div class="card-top">
           <span class="cat-tag">${isVip ? "ESPACIO FIJO · " : ""}${escapeHTML(note.category)}</span>
-          <span>${getRemainingTime(note.expiresAt)}</span>
+          <span>${getRemainingTime(note.expires_at)}</span>
         </div>
         <h3 class="card-title">${escapeHTML(note.title)}</h3>
         <p class="card-body">${escapeHTML(note.content)}</p>
       </div>
+
       ${renderMedia(note)}
       ${linkHtml}
+
       <div>
         <div class="card-footer">
           <span>Por: <strong>${escapeHTML(note.author)}</strong></span>
           <div class="card-actions">
             ${whatsappBtn}
-            ${!isPendingView ? `<button class="action-link" onclick="reportNote('${note.id}')">Reportar</button>` : ""}
+            ${!isPendingView ? `<button class="action-link" onclick="reportNote('${note.id}', ${note.reports || 0})">Reportar</button>` : ""}
           </div>
         </div>
         ${adminButtons}
@@ -214,38 +141,16 @@ function createCardHTML(note, isPendingView = false) {
   `;
 }
 
-function escapeHTML(str) {
-  return String(str ?? "").replace(/[&<>"']/g, (m) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  }[m]));
-}
-
-function escapeAttribute(str) {
-  return escapeHTML(str).replace(/\x60/g, "&#96;");
-}
-
 function renderAll() {
-  const now = Date.now();
-  notes = notes.filter((n) => n.expiresAt > now);
-  saveNotes();
+  updateAdminUI();
 
-  if (isAdmin) {
-    adminBar.classList.remove("hidden");
-    btnAdminToggle.textContent = "Admin Activo";
-  } else {
-    adminBar.classList.add("hidden");
-    btnAdminToggle.textContent = "Acceso Admin";
-  }
-
+  // VIP Aprobados
   const vipNotes = notes.filter((n) => n.plan === "vip" && n.status === "approved");
   vipGrid.innerHTML = vipNotes.length
     ? vipNotes.map((n) => createCardHTML(n)).join("")
     : `<p class="section-desc">No hay espacios fijos activos en este momento. Reserva el tuyo por S/ 5.</p>`;
 
+  // Comunitarios Aprobados
   const commNotes = notes.filter((n) => {
     const matchesStatus = n.plan === "gratis" && n.status === "approved";
     const matchesFilter = currentFilter === "todos" || n.category === currentFilter;
@@ -256,6 +161,7 @@ function renderAll() {
     ? commNotes.map((n) => createCardHTML(n)).join("")
     : `<p class="section-desc">Aún no hay publicaciones en esta categoría.</p>`;
 
+  // Cola de Revisión (Solo Admin)
   const pendingNotes = notes.filter((n) => n.status === "pending");
   pendingCount.textContent = `${pendingNotes.length} pendientes de revisión`;
 
@@ -264,54 +170,156 @@ function renderAll() {
     pendingGrid.innerHTML = pendingNotes.map((n) => createCardHTML(n, true)).join("");
   } else {
     pendingSection.classList.add("hidden");
-    pendingGrid.innerHTML = "";
   }
 }
 
-// Acciones de Moderación
-window.deleteNote = function (id) {
-  notes = notes.filter((n) => n.id !== id);
-  saveNotes();
-  renderAll();
+// ==========================================
+// ACCIONES DE ADMINISTRADOR Y REPORTES
+// ==========================================
+window.deleteNote = async function (id, mediaUrl) {
+  if (!isAdmin) return;
+  if (!confirm("¿Eliminar esta publicación permanentemente?")) return;
+
+  if (mediaUrl) {
+    const fileName = mediaUrl.split("/").pop();
+    await db.storage.from("mural-media").remove([fileName]);
+  }
+
+  const { error } = await db.from("notes").delete().eq("id", id);
+  if (!error) fetchNotes();
 };
 
-window.approveNote = function (id) {
-  const note = notes.find((n) => n.id === id);
-  if (note) {
-    note.status = "approved";
-    if (note.plan === "vip") {
-      note.expiresAt = Date.now() + 84 * 60 * 60 * 1000;
+window.approveNote = async function (id, plan) {
+  if (!isAdmin) return;
+  const updates = { status: "approved" };
+
+  if (plan === "vip") {
+    updates.expires_at = new Date(Date.now() + 84 * 60 * 60 * 1000).toISOString();
+  }
+
+  const { error } = await db.from("notes").update(updates).eq("id", id);
+  if (!error) fetchNotes();
+};
+
+window.reportNote = async function (id, currentReports) {
+  const newReports = (currentReports || 0) + 1;
+  const updates = { reports: newReports };
+
+  if (newReports >= 3) {
+    updates.status = "pending";
+  }
+
+  const { error } = await db.from("notes").update(updates).eq("id", id);
+  if (!error) {
+    alert(
+      newReports >= 3
+        ? "La publicación recibió 3 reportes y fue ocultada para revisión del administrador."
+        : "Reporte registrado."
+    );
+    fetchNotes();
+  }
+};
+
+// ==========================================
+// PUBLICAR NUEVA NOTA + SUBIDA MULTIMEDIA
+// ==========================================
+publishForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const submitBtn = publishForm.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Publicando...";
+
+  try {
+    const plan = document.querySelector('input[name="plan"]:checked').value;
+    const vipColor = document.querySelector('input[name="vipColor"]:checked')?.value || "#b91c1c";
+    const category = document.getElementById("noteCategory").value;
+    const author = document.getElementById("noteAuthor").value.trim();
+    const title = document.getElementById("noteTitle").value.trim();
+    const content = document.getElementById("noteContent").value.trim();
+    const contact = document.getElementById("noteContact").value.trim();
+    const link = document.getElementById("noteLink").value.trim();
+    const file = document.getElementById("noteMedia").files[0];
+
+    if (file && file.size > 20 * 1024 * 1024) {
+      alert("El archivo supera los 20 MB. Para videos o música pesada, pega un enlace de YouTube o Drive.");
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Publicar en el Mural";
+      return;
     }
-    saveNotes();
-    renderAll();
-  }
-};
 
-window.reportNote = function (id) {
-  const note = notes.find((n) => n.id === id);
-  if (!note) return;
-  note.reports = (note.reports || 0) + 1;
-  if (note.reports >= 3) {
-    note.status = "pending";
-    alert("La publicación recibió 3 reportes y fue ocultada para revisión del administrador.");
-  } else {
-    alert("Reporte registrado. A los 3 reportes se oculta automáticamente.");
-  }
-  saveNotes();
-  renderAll();
-};
+    let mediaType = null;
+    let mediaUrl = null;
 
-// Eventos de Modal Publicación
-document.getElementById("btnOpenModal").addEventListener("click", () => {
-  publishModal.classList.remove("hidden");
+    if (file) {
+      if (file.type.startsWith("image/")) mediaType = "image";
+      else if (file.type.startsWith("audio/")) mediaType = "audio";
+      else if (file.type.startsWith("video/")) mediaType = "video";
+
+      const ext = file.name.split(".").pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+
+      const { error: uploadError } = await db.storage
+        .from("mural-media")
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = db.storage
+        .from("mural-media")
+        .getPublicUrl(fileName);
+
+      mediaUrl = publicUrlData.publicUrl;
+    }
+
+    const durationHours = plan === "vip" ? 84 : 24;
+    const requiresApproval = plan === "vip" || Boolean(file);
+
+    const { error: insertError } = await db.from("notes").insert([
+      {
+        plan,
+        color: plan === "vip" ? vipColor : null,
+        category,
+        author,
+        title,
+        content,
+        contact,
+        link,
+        media_type: mediaType,
+        media_url: mediaUrl,
+        status: requiresApproval ? "pending" : "approved",
+        expires_at: new Date(Date.now() + durationHours * 60 * 60 * 1000).toISOString()
+      }
+    ]);
+
+    if (insertError) throw insertError;
+
+    publishForm.reset();
+    vipOptions.classList.add("hidden");
+    publishModal.classList.add("hidden");
+    await fetchNotes();
+
+    if (requiresApproval) {
+      alert("Tu nota fue enviada a revisión del administrador (validación de pago S/ 5 o archivo multimedia).");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Hubo un error al publicar. Revisa tu conexión o la configuración de Supabase.");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Publicar en el Mural";
+  }
 });
 
+// ==========================================
+// EVENTOS DE INTERFAZ Y LOGIN ADMIN
+// ==========================================
+document.getElementById("btnOpenModal").addEventListener("click", () => publishModal.classList.remove("hidden"));
 document.getElementById("btnOpenVipModal").addEventListener("click", () => {
   publishModal.classList.remove("hidden");
   document.querySelector('input[name="plan"][value="vip"]').checked = true;
   vipOptions.classList.remove("hidden");
 });
-
 document.getElementById("btnCloseModal").addEventListener("click", () => publishModal.classList.add("hidden"));
 document.getElementById("btnCancelModal").addEventListener("click", () => publishModal.classList.add("hidden"));
 
@@ -321,76 +329,6 @@ document.querySelectorAll('input[name="plan"]').forEach((radio) => {
   });
 });
 
-// Envío del Formulario
-publishForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  const plan = document.querySelector('input[name="plan"]:checked').value;
-  const vipColor = document.querySelector('input[name="vipColor"]:checked')?.value || "#b91c1c";
-  const category = document.getElementById("noteCategory").value;
-  const author = document.getElementById("noteAuthor").value.trim();
-  const title = document.getElementById("noteTitle").value.trim();
-  const content = document.getElementById("noteContent").value.trim();
-  const contact = document.getElementById("noteContact").value.trim();
-  const link = document.getElementById("noteLink").value.trim();
-  const file = document.getElementById("noteMedia").files[0];
-
-  if (link && !/^https?:\/\//i.test(link)) {
-    alert("El enlace debe comenzar con http:// o https://");
-    return;
-  }
-
-  const durationHours = plan === "vip" ? 84 : 24;
-  const requiresApproval = plan === "vip" || Boolean(file);
-
-  const finalizeNote = (mediaType, mediaUrl) => {
-    const newNote = {
-      id: "note-" + Date.now(),
-      plan,
-      color: plan === "vip" ? vipColor : null,
-      category,
-      author,
-      title,
-      content,
-      contact,
-      link,
-      mediaType,
-      mediaUrl,
-      status: requiresApproval ? "pending" : "approved",
-      reports: 0,
-      createdAt: Date.now(),
-      expiresAt: Date.now() + durationHours * 60 * 60 * 1000
-    };
-
-    notes.unshift(newNote);
-    saveNotes();
-    saveNoteToSupabase(newNote);
-    publishForm.reset();
-    vipOptions.classList.add("hidden");
-    publishModal.classList.add("hidden");
-    renderAll();
-
-    if (requiresApproval) {
-      alert("Tu nota fue enviada a revisión del administrador (para validar pago S/ 5 o archivo multimedia).");
-    }
-  };
-
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      let type = "image";
-      if (file.type.startsWith("audio/")) type = "audio";
-      else if (file.type.startsWith("video/")) type = "video";
-      finalizeNote(type, ev.target.result);
-    };
-    reader.onerror = () => alert("No se pudo leer el archivo adjunto. Intenta nuevamente.");
-    reader.readAsDataURL(file);
-  } else {
-    finalizeNote(null, null);
-  }
-});
-
-// Filtros
 document.querySelectorAll(".filter-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".filter-btn").forEach((b) => b.classList.remove("active"));
@@ -400,35 +338,42 @@ document.querySelectorAll(".filter-btn").forEach((btn) => {
   });
 });
 
-// Login Admin
 btnAdminToggle.addEventListener("click", () => {
   if (!isAdmin) adminModal.classList.remove("hidden");
 });
+document.getElementById("btnCloseAdminModal").addEventListener("click", () => adminModal.classList.add("hidden"));
 
-document.getElementById("btnCloseAdminModal").addEventListener("click", () => {
-  adminModal.classList.add("hidden");
-});
-
-document.getElementById("adminLoginForm").addEventListener("submit", (e) => {
+document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const pass = document.getElementById("adminPassword").value;
-  if (pass === "admin123") {
-    isAdmin = true;
-    sessionStorage.setItem("mural_oxa_admin", "true");
-    adminModal.classList.add("hidden");
-    document.getElementById("adminPassword").value = "";
-    renderAll();
+  const email = document.getElementById("adminEmail").value.trim();
+  const password = document.getElementById("adminPassword").value;
+
+  const { error } = await db.auth.signInWithPassword({ email, password });
+  if (error) {
+    alert("Credenciales incorrectas.");
   } else {
-    alert("Clave incorrecta.");
+    isAdmin = true;
+    adminModal.classList.add("hidden");
+    document.getElementById("adminLoginForm").reset();
+    await fetchNotes();
   }
 });
 
-document.getElementById("btnLogoutAdmin").addEventListener("click", () => {
+document.getElementById("btnLogoutAdmin").addEventListener("click", async () => {
+  await db.auth.signOut();
   isAdmin = false;
-  sessionStorage.removeItem("mural_oxa_admin");
-  renderAll();
+  await fetchNotes();
 });
 
-// Inicializar la interfaz y sincronizar publicaciones compartidas.
-renderAll();
-loadNotesFromSupabase();
+// Tiempo real
+db.channel("mural-realtime")
+  .on("postgres_changes", { event: "*", schema: "public", table: "notes" }, () => {
+    fetchNotes();
+  })
+  .subscribe();
+
+// Arrancar aplicación
+(async function init() {
+  await checkAdminSession();
+  await fetchNotes();
+})();
