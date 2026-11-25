@@ -21,6 +21,7 @@
   --radius:22px;
   --serif:Fraunces,Georgia,"Times New Roman",serif;
   --sans:Nunito,Inter,"Segoe UI",system-ui,-apple-system,sans-serif;
+  /* Motivos (SVG incrustados) */
   --diamonds:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='10' viewBox='0 0 24 10'%3E%3Cpath d='M0 5L12 0l12 5-12 5z' fill='%23b5304a'/%3E%3Cpath d='M12 2.2L17.6 5 12 7.8 6.4 5z' fill='%23f7f1e0' fill-opacity='.9'/%3E%3C/svg%3E");
   --leaf:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 21C3 10 10 3 21 3c0 11-7 18-18 18z' fill='%236f9a5a'/%3E%3Cpath d='M3 21L15 9' stroke='%2314382a' stroke-opacity='.45' stroke-width='1.2' fill='none'/%3E%3C/svg%3E");
   --skyline-light:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='44' viewBox='0 0 200 44'%3E%3Cg fill='%2366865c' fill-opacity='.55'%3E%3Cpath d='M0 44V28L14 12l14 16v16z'/%3E%3Cpath d='M34 44V20L58 0l24 20v24z'/%3E%3Crect x='100' y='22' width='3' height='22'/%3E%3Cellipse cx='101.5' cy='20' rx='18' ry='6'/%3E%3Cellipse cx='101.5' cy='13' rx='11' ry='4'/%3E%3Cpath d='M128 44V26l18-16 18 16v18z'/%3E%3Crect x='178' y='28' width='3' height='16'/%3E%3Cellipse cx='179.5' cy='26' rx='12' ry='4.5'/%3E%3C/g%3E%3C/svg%3E");
@@ -36,6 +37,7 @@ body{
   line-height:1.6;-webkit-font-smoothing:antialiased;
   background:#cfdcc9;
 }
+/* La plaza de fondo, suavizada para que el contenido respire */
 body::before{
   content:"";position:fixed;inset:-12px;z-index:-2;pointer-events:none;
   background:
@@ -44,6 +46,7 @@ body::before{
   filter:blur(2.5px) saturate(1.08);
   transform:scale(1.02);
 }
+/* Luz de tarde entre las montañas */
 body::after{
   content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
   background:
@@ -55,6 +58,8 @@ button{cursor:pointer}
 a{color:inherit}
 .hidden{display:none!important}
 .container{width:min(1320px,100%);margin:0 auto;padding-inline:clamp(16px,3vw,34px)}
+
+/* Navegación — alero de chalet con remate de rombos rojos */
 .topbar{
   position:sticky;top:0;z-index:40;
   background:linear-gradient(180deg,#1c4a35,#14382a);
@@ -81,6 +86,8 @@ a{color:inherit}
 }
 .subtitle{margin-top:3px;color:rgba(255,246,220,.8);font-size:.78rem;letter-spacing:.02em}
 .topbar-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+
+/* Botones */
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
   border:1px solid transparent;border-radius:999px;padding:11px 20px;
@@ -104,6 +111,8 @@ a{color:inherit}
 .btn-outline-crimson:hover{background:linear-gradient(135deg,#2f5a2f,var(--forest))}
 .btn-danger-sm{padding:6px 13px;font-size:.78rem}
 .full-width{width:100%}
+
+/* Barra de administración */
 .admin-bar{background:rgba(27,66,46,.97);border-bottom:1px solid rgba(217,181,106,.45);padding:10px 0;color:#f8f2df;font-size:.85rem}
 .admin-bar-inner,.admin-status,.admin-stats{display:flex;align-items:center;gap:12px}
 .admin-bar-inner{justify-content:space-between;flex-wrap:wrap}
@@ -111,6 +120,8 @@ a{color:inherit}
 .status-dot{width:9px;height:9px;border-radius:50%;background:#b9d28e;box-shadow:0 0 0 4px rgba(185,210,142,.18)}
 .admin-stats{color:#e7e8d9}
 .admin-controls{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px dashed rgba(168,119,79,.5)}
+
+/* Portada — la plaza, la neblina y las hojas */
 .oxapampa-hero{
   position:relative;isolation:isolate;overflow:hidden;
   display:flex;align-items:center;
@@ -122,7 +133,7 @@ a{color:inherit}
   background:
     linear-gradient(97deg,rgba(9,36,24,.9) 0%,rgba(14,48,32,.66) 38%,rgba(14,48,32,.08) 74%,rgba(14,48,32,0) 100%) padding-box,
     linear-gradient(0deg,rgba(9,36,24,.5),transparent 38%) padding-box,
-    url("./oxapampa-bg.jpg") center 56%/cover no-repeat padding-box,
+    url("./oxapampa-bg.jpg") center 34%/cover no-repeat padding-box,
     var(--gold-frame) border-box;
   box-shadow:0 28px 70px rgba(8,28,18,.4);
 }
@@ -151,6 +162,8 @@ a{color:inherit}
   color:#f6e7c1;font-size:.76rem;font-weight:700;letter-spacing:.09em;
 }
 .hero-signature::before{content:"";width:16px;height:16px;background:var(--leaf) center/contain no-repeat}
+
+/* Sello postal de la portada */
 .hero-seal{
   position:absolute;z-index:2;right:clamp(28px,6vw,92px);top:50%;
   width:140px;height:140px;margin-top:-70px;
@@ -159,6 +172,8 @@ a{color:inherit}
 }
 .hero-seal svg{display:block;width:100%;height:100%}
 @keyframes seal-sway{0%,100%{transform:rotate(7deg)}50%{transform:rotate(3deg)}}
+
+/* Neblina de la mañana */
 .hero-mist{position:absolute;z-index:1;pointer-events:none;left:-20%;width:140%;border-radius:50%;filter:blur(18px)}
 .hero-mist-a{
   bottom:-12%;height:46%;opacity:.5;
@@ -171,6 +186,8 @@ a{color:inherit}
   animation:mist-drift 62s ease-in-out infinite alternate-reverse;
 }
 @keyframes mist-drift{from{transform:translateX(-6%)}to{transform:translateX(8%)}}
+
+/* Hojas que caen despacio */
 .hero-leaves{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
 .hero-leaves span{
   position:absolute;top:-34px;width:22px;height:22px;opacity:0;
@@ -190,6 +207,8 @@ a{color:inherit}
   92%{opacity:.7}
   100%{opacity:0;transform:translate(-18px,560px) rotate(330deg)}
 }
+
+/* Contenido */
 .main-content{padding-top:40px;padding-bottom:60px}
 .section-block{
   position:relative;padding:clamp(30px,3.4vw,40px) clamp(21px,3vw,32px) clamp(21px,3vw,32px);
@@ -209,7 +228,10 @@ a{color:inherit}
 }
 .section-header h2::before{content:"";width:28px;height:28px;flex:0 0 28px;background:var(--leaf) center/contain no-repeat;transform:rotate(-8deg)}
 .section-desc{margin-top:4px;color:var(--muted);font-size:.88rem;line-height:1.6}
+/* Divisor: perfil de chalets y araucarias */
 .divider{height:44px;border:0;margin:26px auto 14px;background:var(--skyline-light) repeat-x center bottom/200px 44px}
+
+/* Cuadrículas y publicaciones — carteles artesanales con marco de madera */
 .vip-grid,.community-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:22px}
 .vip-card,.note-card{
   position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;gap:15px;
@@ -221,10 +243,12 @@ a{color:inherit}
   box-shadow:0 10px 24px rgba(40,26,14,.2),0 2px 0 rgba(255,255,255,.4) inset;
   transition:transform .24s ease,box-shadow .24s ease;
 }
+/* Banderín de rombos */
 .vip-card::before,.note-card::before{
   content:"";position:absolute;left:0;right:0;top:0;height:11px;
   background:var(--diamonds) repeat-x left top/24px 10px;
 }
+/* Clavos del cartel */
 .vip-card::after,.note-card::after{
   content:"";position:absolute;inset:0;pointer-events:none;
   background:
@@ -234,6 +258,7 @@ a{color:inherit}
 .note-card:nth-child(odd){transform:rotate(-.35deg)}
 .note-card:nth-child(even){transform:rotate(.3deg)}
 .vip-card:hover,.note-card:hover{transform:translateY(-6px) rotate(0deg);box-shadow:0 20px 38px rgba(40,26,14,.3)}
+/* Espacios fijos: marco dorado, más presencia */
 .vip-card{
   background:
     linear-gradient(155deg,#fffef6,#faf0d4) padding-box,
@@ -269,6 +294,8 @@ a{color:inherit}
   font-size:.66rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
   box-shadow:0 2px 6px rgba(143,34,56,.35);
 }
+
+/* Filtros — tablillas de madera */
 .filter-group{display:flex;gap:8px;flex-wrap:wrap}
 .filter-btn{
   padding:9px 16px;border:1.5px solid rgba(122,75,46,.35);border-radius:999px;
@@ -282,6 +309,8 @@ a{color:inherit}
 }
 .pending-box{margin-bottom:23px;padding:18px;background:#f7f0dc;border:2px dashed rgba(122,75,46,.45);border-radius:18px}
 .pending-box h3{margin-bottom:14px;color:var(--forest);font-family:var(--serif);font-size:1rem}
+
+/* Modales y formularios */
 .modal-backdrop{
   position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
   padding:16px;background:rgba(10,32,22,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
@@ -326,6 +355,8 @@ a{color:inherit}
 .modal-footer{display:flex;justify-content:flex-end;gap:9px;margin-top:4px}
 .modal-footer .btn-ghost,.modal-card .btn-ghost{color:var(--wood);background:#f3ead2;border-color:rgba(122,75,46,.35)}
 .modal-footer .btn-ghost:hover,.modal-card .btn-ghost:hover{background:#ead9b3}
+
+/* Pie: el pueblo al caer la tarde */
 .site-footer{margin-top:6px}
 .site-footer-skyline{height:44px;background:var(--skyline-dark) repeat-x center bottom/200px 44px}
 .site-footer p{
@@ -333,9 +364,13 @@ a{color:inherit}
   color:rgba(247,241,224,.82);font-family:var(--serif);font-size:.9rem;letter-spacing:.04em;
   border-top:0;
 }
+
+/* Accesibilidad */
 :focus-visible{outline:3px solid rgba(217,181,106,.9);outline-offset:3px}
 @media(hover:none){.vip-card:hover,.note-card:hover,.btn:hover{transform:none}}
-@media(max-width:980px){.hero-seal{display:none}}
+@media(max-width:980px){
+  .hero-seal{display:none}
+}
 @media(max-width:760px){
   .topbar-inner{align-items:flex-start;flex-direction:column;gap:12px;padding-block:12px}
   .brand-mark{width:44px;height:44px;min-width:44px}
